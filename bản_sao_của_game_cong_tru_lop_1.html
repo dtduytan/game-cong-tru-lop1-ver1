@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Game Cộng Trừ Lớp 1</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', sans-serif;
+      background-color: #fef6e4;
+      text-align: center;
+      padding: 40px;
+    }
+    .game-box {
+      background: #fff3c7;
+      border-radius: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      display: inline-block;
+      padding: 30px;
+      width: 320px;
+      position: relative;
+    }
+    .character {
+      width: 100px;
+      margin: 10px auto;
+      transition: transform 0.4s ease;
+    }
+    .illustration {
+      width: 140px;
+      margin: 10px auto;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+    .animate-correct {
+      animation: happyBounce 0.6s ease;
+    }
+    .animate-wrong {
+      animation: sadShake 0.6s ease;
+    }
+    @keyframes happyBounce {
+      0% { transform: translateY(0); }
+      30% { transform: translateY(-15px); }
+      60% { transform: translateY(10px); }
+      100% { transform: translateY(0); }
+    }
+    @keyframes sadShake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      50% { transform: translateX(10px); }
+      75% { transform: translateX(-10px); }
+      100% { transform: translateX(0); }
+    }
+    .question {
+      font-size: 28px;
+      margin: 20px 0 10px 0;
+    }
+    .progress {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: #6b705c;
+    }
+    .answers button {
+      font-size: 20px;
+      margin: 10px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      background-color: #ffd6a5;
+      cursor: pointer;
+    }
+    .answers button:hover {
+      background-color: #ffb4a2;
+    }
+    .result {
+      font-size: 22px;
+      margin-top: 20px;
+    }
+    .score {
+      font-size: 20px;
+      margin-top: 10px;
+    }
+    .start-btn {
+      font-size: 20px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      background-color: #a0c4ff;
+      cursor: pointer;
+    }
+    .instruction {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: #8d4c3d;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-box">
+    <h1>🎉 Bé Thông Minh 🎉</h1>
+    <div class="instruction">Hãy chọn đáp án đúng cho mỗi phép tính nhé!</div>
+    <div class="progress" id="progress">Câu: 0/20</div>
+    <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="Mi Mi" class="character" id="character-img">
+    <img src="https://cdn-icons-png.flaticon.com/512/616/616430.png" alt="minh họa" class="illustration" id="illustration">
+    <div class="question" id="question">Ấn bắt đầu để chơi!</div>
+    <div class="answers" id="answers"></div>
+    <div class="result" id="result"></div>
+    <div class="score" id="score"></div>
+    <button class="start-btn" onclick="startGame()">Bắt đầu</button>
+  </div>
+
+  <audio id="correctSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+  <audio id="wrongSound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
+
+  <script>
+    const allQuestions = [];
+    for (let a = 1; a <= 10; a++) {
+      for (let b = 1; b <= 10; b++) {
+        const sum = a + b;
+        const diff = a - b;
+
+        if (sum >= 1 && sum <= 10) {
+          allQuestions.push({
+            question: `${a} + ${b}`,
+            options: shuffle([
+              sum.toString(),
+              (sum + 1 <= 10 ? sum + 1 : sum - 1).toString(),
+              (sum - 1 >= 1 ? sum - 1 : sum + 2).toString()
+            ]),
+            answer: sum.toString()
+          });
+        }
+
+        if (diff >= 1 && diff <= 10) {
+          allQuestions.push({
+            question: `${a} - ${b}`,
+            options: shuffle([
+              diff.toString(),
+              (diff + 1 <= 10 ? diff + 1 : diff - 1).toString(),
+              (diff - 1 >= 1 ? diff - 1 : diff + 2).toString()
+            ]),
+            answer: diff.toString()
+          });
+        }
+      }
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    let selectedQuestions = [];
+    let currentQuestion = null;
+    let score = 0;
+    let questionIndex = 0;
+
+    function startGame() {
+      score = 0;
+      questionIndex = 0;
+      selectedQuestions = shuffle(allQuestions).slice(0, 20);
+      updateProgress();
+      nextQuestion();
+    }
+
+    function updateProgress() {
+      document.getElementById('progress').textContent = `Câu: ${questionIndex + 1}/20`;
+    }
+
+    function nextQuestion() {
+      if (questionIndex >= selectedQuestions.length) {
+        document.getElementById('question').textContent = "Hoàn thành trò chơi!";
+        document.getElementById('answers').innerHTML = '';
+        document.getElementById('score').textContent = `Điểm: ${score}/20`;
+        document.getElementById('progress').textContent = `Câu: 20/20`;
+        return;
+      }
+
+      currentQuestion = selectedQuestions[questionIndex];
+      document.getElementById('question').textContent = currentQuestion.question;
+      updateProgress();
+
+      const answersDiv = document.getElementById('answers');
+      answersDiv.innerHTML = '';
+      currentQuestion.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.textContent = opt;
+        btn.onclick = () => checkAnswer(opt);
+        answersDiv.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(selected) {
+      const resultDiv = document.getElementById('result');
+      const charImg = document.getElementById('character-img');
+      const correctSound = document.getElementById('correctSound');
+      const wrongSound = document.getElementById('wrongSound');
+
+      if (selected === currentQuestion.answer) {
+        resultDiv.textContent = "✅ Đúng rồi!";
+        charImg.classList.add('animate-correct');
+        correctSound.play();
+        score++;
+      } else {
+        resultDiv.textContent = "❌ Sai rồi, thử lại nhé!";
+        charImg.classList.add('animate-wrong');
+        wrongSound.play();
+      }
+
+      setTimeout(() => {
+        resultDiv.textContent = '';
+        charImg.classList.remove('animate-correct', 'animate-wrong');
+        questionIndex++;
+        nextQuestion();
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
